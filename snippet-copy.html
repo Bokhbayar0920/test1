@@ -1,0 +1,39 @@
+<!-- Decorative micro-details snippet (insert before closing </body>) -->
+<style>
+/* Small decorative line elements near cards */
+.card-deco-line { position:absolute; z-index:0; pointer-events:none; opacity:.55; }
+.card-deco-line.vert { width:1px; height:48px; background:linear-gradient(to bottom, rgba(196,180,154,0), rgba(196,180,154,.9) 50%, rgba(196,180,154,0)); }
+.card-deco-line.horiz { height:1px; width:64px; background:linear-gradient(to right, rgba(196,180,154,0), rgba(196,180,154,.9) 50%, rgba(196,180,154,0)); }
+
+/* Enhanced card hover glow via ::after radial glow */
+.category-card:hover::after, .material-card:hover::after {
+  content:""; position:absolute; inset:-20px; z-index:-1; border-radius:inherit;
+  background:radial-gradient(circle at 50% 30%, rgba(196,180,154,.18) 0%, rgba(196,180,154,0) 70%);
+  pointer-events:none; transition:opacity .4s ease; opacity:1;
+}
+.category-card::after, .material-card::after { content:""; position:absolute; inset:-20px; z-index:-1; border-radius:inherit; background:radial-gradient(circle at 50% 30%, rgba(196,180,154,.18) 0%, rgba(196,180,154,0) 70%); pointer-events:none; opacity:0; transition:opacity .4s ease; }
+</style>
+
+<!-- Floating geometric shapes near cards -->
+<div class="geo-shape geo-shape-1" aria-hidden="true" style="position:absolute;top:20%;left:8%;width:64px;height:64px;border:1.5px solid rgba(196,180,154,.35);border-radius:50%;pointer-events:none;z-index:0;opacity:.7;"></div>
+<div class="geo-shape geo-shape-2" aria-hidden="true" style="position:absolute;top:55%;left:92%;width:48px;height:48px;border:1.5px solid rgba(196,180,154,.35);border-radius:8px;transform:rotate(15deg);pointer-events:none;z-index:0;opacity:.7;"></div>
+<div class="geo-shape geo-shape-3" aria-hidden="true" style="position:absolute;top:82%;left:10%;width:56px;height:56px;border:1.5px solid rgba(196,180,154,.35);border-radius:50%;pointer-events:none;z-index:0;opacity:.7;"></div>
+
+<script>
+// GSAP ScrollTrigger scrub for continuous scroll-linked float
+if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+  gsap.utils.toArray('.geo-shape').forEach((el, i) => {
+    gsap.to(el, {
+      y: 30 + i * 15,
+      rotation: (i % 2 === 0) ? 10 : -10,
+      scrollTrigger: {
+        trigger: el,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 1.2 // continuous scroll-linked motion
+      }
+    });
+  });
+}
+</script>

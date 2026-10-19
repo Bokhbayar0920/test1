@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Боловсролын Платформ — 3D Motion</title>
+<link rel="stylesheet" href="styles.css" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600;800&family=Noto+Serif+Mongolian:wght@400;700&family=Noto+Sans+Mongolian:wght@300;400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<style>
+:root{--ink:#0a0a0a;--ink-soft:#181818;--ink-faint:#555;--surface:#f8f6f2;--paper:#fff;--accent:#2c3e50;--warm:#8b734b;--gold:#c4b49a;--radius:2rem;--font-display:"Playfair Display","Noto Serif Mongolian",Georgia,serif;--font-body:"Inter","Noto Sans Mongolian",system-ui,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:88px}
+body{font-family:var(--font-body);background:var(--surface);color:var(--ink);line-height:1.55;letter-spacing:-0.01em;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:rgba(44,62,80,0.12);color:inherit}
+
+/* ---------- HEADER ---------- */
+.site-header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.82);backdrop-filter:saturate(140%) blur(14px);-webkit-backdrop-filter:saturate(140%) blur(14px);border-bottom:1px solid rgba(0,0,0,0.06);transition:box-shadow .3s ease,background .3s ease}
+.site-header.scrolled{box-shadow:0 12px 40px rgba(0,0,0,0.08);background:rgba(255,255,255,0.95)}
+.header-inner{display:flex;align-items:center;gap:2rem;height:80px;padding:0 3vw;max-width:1400px;margin:0 auto}
+.logo{font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:var(--ink);letter-spacing:-0.035em;text-decoration:none;display:inline-flex;align-items:center;gap:.7rem;transition:opacity .2s}
+.logo:hover{opacity:.7}.logo-mark{font-size:1.6rem;color:var(--warm);line-height:1}
+.main-nav{flex:1;display:flex;justify-content:center}
+.nav-list{list-style:none;display:flex;gap:2.5rem}
+.nav-list a{font-family:var(--font-body);font-weight:500;font-size:.85rem;color:var(--ink-faint);letter-spacing:.05em;text-transform:uppercase;text-decoration:none;position:relative;padding:.15rem 0;transition:color .2s}
+.nav-list a::after{content:"";position:absolute;left:50%;bottom:-2px;width:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:1px;transition:width .25s ease,left .25s ease}
+.nav-list a:hover{color:var(--ink)}
+.nav-list a:hover::after{width:100%;left:0}
+.search-form{display:flex;align-items:center;gap:.35rem;background:#fff;border:1.5px solid rgba(0,0,0,0.08);border-radius:999px;padding:.35rem .9rem;flex:1;max-width:260px;transition:border-color .2s,box-shadow .2s}
+.search-form:focus-within{border-color:rgba(44,62,80,0.3);box-shadow:0 0 0 3px rgba(44,62,80,0.08)}
+.search-form input{background:transparent;border:none;outline:none;color:var(--ink);font-family:inherit;font-size:.85rem;width:100%;padding:.25rem 0}
+.search-form button{background:none;border:none;cursor:pointer;padding:.2rem;color:var(--ink-faint);font-size:1rem}
+.auth-actions{display:flex;gap:.6rem}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.65rem 1.4rem;border-radius:var(--radius-sm);font-family:var(--font-body);font-weight:600;font-size:.85rem;letter-spacing:.01em;border:1.5px solid transparent;cursor:pointer;transition:transform .08s,box-shadow .25s,background .2s,border-color .2s;line-height:1.25;text-decoration:none}
+.btn:hover{transform:translateY(-3px)}
+.btn:active{transform:translateY(0)}
+.btn-ghost{background:transparent;color:var(--ink);border-color:rgba(0,0,0,0.12)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent-deep);background:rgba(44,62,80,0.05)}
+.btn-primary{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 4px 20px rgba(10,10,10,0.12)}
+.btn-primary:hover{background:#152838;border-color:#152838;box-shadow:0 8px 30px rgba(10,10,10,0.18)}
+.btn-large{padding:.95rem 2rem;font-size:1rem;letter-spacing:.02em}
+.menu-btn{display:none;flex-direction:column;gap:5px;background:none;border:none;padding:.4rem;cursor:pointer}
+.menu-btn span{display:block;width:24px;height:1.5px;background:var(--ink);border-radius:1px;transition:.2s ease;transform-origin:center}
+.menu-btn[aria-expanded="true"] span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.menu-btn[aria-expanded="true"] span:nth-child(2){opacity:0}
+.menu-btn[aria-expanded="true"] span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+
+/* ---------- HERO ---------- */
+.hero{position:relative;overflow:hidden;background:#0f1115;padding:10rem 0 9rem;isolation:isolate}
+.hero::before{content:"";position:absolute;top:-20%;left:-10%;width:70vw;height:70vw;background:radial-gradient(circle at 30% 30%,rgba(196,180,154,0.12),transparent 60%);border-radius:50%;pointer-events:none;z-index:0;animation:heroOrb 12s ease-in-out infinite alternate}
+.hero::after{content:"";position:absolute;bottom:-15%;right:-10%;width:60vw;height:60vw;background:radial-gradient(circle at 70% 70%,rgba(44,62,80,0.15),transparent 60%);border-radius:50%;pointer-events:none;z-index:0;animation:heroOrb2 14s ease-in-out infinite alternate}
+@keyframes heroOrb{from{transform:translate(0,0)}to{transform:translate(40px,-30px)}}
+@keyframes heroOrb2{from{transform:translate(0,0)}to{transform:translate(-30px,20px)}}
+.hero-grid{display:grid;grid-template-columns:1.05fr 0.95fr;gap:4rem;align-items:center;position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:0 3vw}
+.hero-title{font-family:var(--font-display);font-size:clamp(3.5rem,7vw,6rem);font-weight:700;line-height:1.05;color:#fff;letter-spacing:-0.05em;margin:0 0 1.5rem;word-break:keep-all}
+.hero-title .accent{background:linear-gradient(135deg,var(--gold),#e8cfa6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative}
+.hero-title .accent::after{content:"";position:absolute;left:-0.08em;right:-0.08em;bottom:0.08em;height:0.18em;background:linear-gradient(90deg,var(--gold),#e8cfa6);opacity:.35;border-radius:2px;z-index:-1}
+.hero-sub{font-size:1.15rem;color:#aaa;max-width:460px;margin:0 0 2.5rem;line-height:1.65;font-weight:300;letter-spacing:-0.01em}
+.hero-cta{display:flex;gap:.75rem;flex-wrap:wrap}
+.hero-visual{display:flex;align-items:center;justify-content:center;min-height:380px;perspective:1200px}
+
+/* ---------- 3D CUBE (Modern) ---------- */
+.cube-stage{width:260px;height:260px;position:relative;transform-style:preserve-3d;perspective:1400px;animation:cubeFloat 6s ease-in-out infinite}
+@keyframes cubeFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+.cube{width:100%;height:100%;position:relative;transform-style:preserve-3d;transform:rotateY(-20deg) rotateX(12deg);transition:transform .7s ease}
+.cube:hover{transform:rotateY(-10deg) rotateX(5deg) scale(1.05)}
+.face{position:absolute;width:220px;height:220px;border:1.5px solid rgba(255,255,255,0.12);background:linear-gradient(135deg,rgba(255,255,255,0.08),rgba(196,180,154,0.08));border-radius:2rem;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:3.5rem;color:rgba(255,255,255,0.9);box-shadow:inset 0 0 60px rgba(255,255,255,0.05),0 30px 80px rgba(0,0,0,0.35);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);transition:background .3s,box-shadow .3s}
+.face:hover{background:linear-gradient(135deg,rgba(255,255,255,0.15),rgba(196,180,154,0.15));box-shadow:inset 0 0 80px rgba(255,255,255,0.1),0 40px 100px rgba(0,0,0,0.45)}
+.face-front{transform:translateZ(110px)}
+.face-back{transform:rotateY(180deg) translateZ(110px)}
+.face-right{transform:rotateY(90deg) translateZ(110px)}
+.face-left{transform:rotateY(-90deg) translateZ(110px)}
+.face-top{transform:rotateX(90deg) translateZ(110px)}
+.face-bottom{transform:rotateX(-90deg) translateZ(110px)}
+
+/* ---------- SECTIONS ---------- */
+section{padding:6rem 0;position:relative}
+.section-heading{font-family:var(--font-display);font-size:clamp(2.2rem,4vw,3rem);font-weight:700;color:var(--ink);margin:0 0 3.5rem;letter-spacing:-0.035em;line-height:1.15;display:inline-block;position:relative}
+.section-heading::after{content:"";display:block;width:3.5rem;height:3px;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:3px;margin-top:.75rem;opacity:.8}
+.container{width:min(92%,1200px);margin-inline:auto}
+
+/* Categories */
+.categories{background:linear-gradient(180deg,#fff 0%,#f5f2ec 100%);border-top:1px solid rgba(0,0,0,0.05);border-bottom:1px solid rgba(0,0,0,0.05);position:relative}
+.categories::before{content:"";position:absolute;top:0;left:0;right:0;height:120px;background:linear-gradient(180deg,rgba(255,255,255,.9),transparent);pointer-events:none;z-index:1}
+.category-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;position:relative;z-index:2}
+.category-card{background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:var(--radius);padding:2rem;display:flex;flex-direction:column;gap:.5rem;transition:transform .25s var(--ease-editorial),box-shadow .3s ease,border-color .2s ease;box-shadow:0 4px 24px rgba(0,0,0,0.04);position:relative;overflow:hidden;text-decoration:none}
+.category-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--gold));opacity:.7;transform:scaleX(0);transform-origin:left;transition:transform .3s ease;border-radius:3px 3px 0 0}
+.category-card:hover{transform:translateY(-8px);box-shadow:0 16px 48px rgba(0,0,0,0.08);border-color:rgba(0,0,0,0.12)}
+.category-card:hover::before{transform:scaleX(1)}
+.category-card .cat-icon{font-size:2.2rem;line-height:1;color:var(--accent);transition:transform .3s var(--ease-bounce)}
+.category-card:hover .cat-icon{transform:scale(1.2) rotate(-6deg)}
+.category-card h3{font-family:var(--font-display);font-size:1.2rem;margin:0;color:var(--ink);letter-spacing:-0.02em}
+.category-card p{margin:0;color:var(--ink-faint);font-size:.9rem;font-weight:300}
+
+/* Materials */
+.materials{background:linear-gradient(180deg,#f5f2ec 0%,#fff 100%);position:relative}
+.materials-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem}
+.material-card{background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:var(--radius);overflow:hidden;transition:transform .25s var(--ease-editorial),box-shadow .3s ease;box-shadow:0 4px 24px rgba(0,0,0,0.04);position:relative;text-decoration:none;display:block}
+.material-card:hover{transform:translateY(-6px);box-shadow:0 16px 48px rgba(0,0,0,0.1);border-color:rgba(0,0,0,0.12)}
+.material-thumb{height:170px;background:linear-gradient(135deg,#2c3e50,#1a2530);display:flex;align-items:center;justify-content:center;font-size:3rem;color:rgba(255,255,255,.9);position:relative;overflow:hidden;transition:background .3s ease}
+.material-thumb::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.08),transparent 70%)}
+.material-card:hover .material-thumb{background:linear-gradient(135deg,#3d5a7a,#2c3e50)}
+.material-card h3{font-family:var(--font-display);font-size:1.15rem;margin:1.25rem 1.25rem .35rem;color:var(--ink);letter-spacing:-0.02em}
+.material-card p{margin:0 1.25rem .25rem;color:var(--ink-faint);font-size:.88rem;line-height:1.55;font-weight:300}
+.material-card .btn-sm{margin:0.5rem 1.25rem 1.25rem;display:inline-flex}
+
+/* Progress */
+.progress{background:linear-gradient(135deg,#1a2530,#2c3e50);color:#fff;padding:6rem 0;position:relative;overflow:hidden}
+.progress::before{content:"";position:absolute;top:-30%;right:-10%;width:60vw;height:60vw;background:radial-gradient(circle at 50% 50%,rgba(196,180,154,.08),transparent 60%);border-radius:50%;pointer-events:none}
+.progress-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:0 3vw}
+.progress-text h2{font-family:var(--font-display);font-size:clamp(2.2rem,3.5vw,3rem);font-weight:700;margin:0 0 1rem;letter-spacing:-0.035em;line-height:1.15;color:#fff}
+.progress-text>p{color:rgba(255,255,255,.65);font-size:1.05rem;max-width:420px;line-height:1.65;font-weight:300;margin:0 0 2rem}
+.stats-row{display:flex;gap:3rem;margin-top:2rem;flex-wrap:wrap}
+.stat{text-align:left}
+.stat strong{display:block;font-family:var(--font-display);font-size:2.4rem;color:#fff;line-height:1;letter-spacing:-0.03em}
+.stat span{display:block;font-size:.85rem;color:rgba(255,255,255,.5);margin-top:.35rem;letter-spacing:.01em}
+.progress-visual{display:flex;align-items:center;justify-content:center;position:relative}
+.progress-chart{width:100%;max-width:420px;height:auto;border-radius:var(--radius-sm);filter:drop-shadow(0 10px 30px rgba(0,0,0,.3))}
+
+/* Footer */
+.site-footer{background:linear-gradient(180deg,#0a0a0a,#111);color:#eaeaea;padding:4rem 0 1.5rem;position:relative}
+.site-footer::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(196,180,154,.3),transparent)}
+.footer-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:3rem;max-width:1200px;margin:0 auto;padding:0 3vw}
+.footer-brand a{font-family:var(--font-display);font-weight:700;color:#fff;font-size:1.3rem;display:inline-flex;align-items:center;gap:.7rem;letter-spacing:-0.03em;text-decoration:none;transition:opacity .2s}
+.footer-brand a:hover{opacity:.75}
+.footer-brand p{margin:.75rem 0 0;color:rgba(255,255,255,.45);font-size:.9rem;max-width:320px;line-height:1.5;font-weight:300}
+.footer-nav h4{color:#fff;font-family:var(--font-display);font-size:1rem;margin:0 0 .75rem;letter-spacing:.02em}
+.footer-nav ul{list-style:none;padding:0;margin:0}
+.footer-nav li+li{margin-top:.35rem}
+.footer-nav a{color:rgba(255,255,255,.55);font-size:.85rem;text-decoration:none;transition:color .2s;letter-spacing:.01em}
+.footer-nav a:hover{color:#fff}
+.footer-social{display:flex;gap:.75rem}
+.footer-social a{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.06);color:#fff;font-size:1.05rem;text-decoration:none;transition:background .2s,transform .15s,border-color .2s;border:1px solid rgba(255,255,255,.08)}
+.footer-social a:hover{background:rgba(255,255,255,.12);transform:translateY(-3px);border-color:rgba(255,255,255,.15)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:1rem;margin-top:3rem;font-size:.82rem;color:rgba(255,255,255,.35);letter-spacing:.01em;max-width:1200px;margin-inline:auto;padding-inline:3vw}
+
+/* Dialogs */
+dialog{border:none;border-radius:var(--radius);padding:0;background:#fff;box-shadow:0 24px 80px rgba(10,10,10,.15);max-width:420px;width:min(92%,420px);font-family:var(--font-body)}
+dialog::backdrop{background:rgba(10,10,10,.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+dialog form{padding:2rem;display:flex;flex-direction:column;gap:1rem}
+dialog h2{font-family:var(--font-display);font-size:1.5rem;margin:0 0 .25rem;color:var(--ink);letter-spacing:-.03em}
+dialog label{font-size:.82rem;font-weight:600;color:var(--ink-muted);letter-spacing:.01em}
+dialog input{padding:.75rem .9rem;border:1.5px solid rgba(0,0,0,.1);border-radius:var(--radius-sm);font-family:inherit;font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s;background:#f8f6f2;color:var(--ink)}
+dialog input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(44,62,80,.08)}
+dialog button{margin-top:.25rem}
+.toast{position:fixed;bottom:2rem;right:2rem;z-index:200;background:var(--ink);color:#fff;padding:.85rem 1.25rem;border-radius:var(--radius-xs);box-shadow:var(--shadow-hover);font-weight:500;font-family:var(--font-body);font-size:.9rem;letter-spacing:.01em;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .35s ease,transform .35s ease;border:1px solid rgba(255,255,255,.08)}
+.toast.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.btn-back-top{position:fixed;bottom:1.5rem;right:1.5rem;z-index:150;width:48px;height:48px;border-radius:50%;background:var(--ink);color:#fff;border:none;font-size:1.2rem;cursor:pointer;box-shadow:0 8px 30px rgba(0,0,0,.2);opacity:.9;transition:opacity .2s,transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center;font-family:var(--font-display)}
+.btn-back-top:hover{opacity:1;transform:translateY(-3px) scale(1.08);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+
+/* Responsive */
+@media(max-width:1024px){.hero-grid{grid-template-columns:1fr;gap:3rem;text-align:center}.hero-cta{justify-content:center}.hero-visual{min-height:300px}.progress-grid{grid-template-columns:1fr;gap:3rem}.stats-row{justify-content:flex-start}.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.header-inner{gap:.75rem;flex-wrap:wrap;height:auto;padding:.75rem 0}.search-form{max-width:100%;order:3;flex-basis:100%}.auth-actions{order:2}.nav-list{display:none;position:absolute;top:calc(80px + .5rem);left:0;right:0;background:rgba(255,255,255,.98);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,0,0,.06);padding:.75rem 1rem;flex-direction:column;gap:.75rem;box-shadow:0 16px 40px rgba(0,0,0,.08);z-index:99;border-radius:0 0 var(--radius-sm) var(--radius-sm)}.nav-list.open{display:flex}.menu-btn{display:flex;order:2}.hero{padding:6rem 0 5rem}.category-grid,.materials-grid{grid-template-columns:1fr}.section-heading{font-size:2rem}.footer-grid{grid-template-columns:1fr;gap:2rem}.cube-stage{width:200px;height:200px}.face{width:180px;height:180px}.face-front{transform:translateZ(90px)}.face-back{transform:rotateY(180deg) translateZ(90px)}.face-right{transform:rotateY(90deg) translateZ(90px)}.face-left{transform:rotateY(-90deg) translateZ(90px)}.face-top{transform:rotateX(90deg) translateZ(90px)}.face-bottom{transform:rotateX(-90deg) translateZ(90px)}}
+@media(max-width:480px){.hero-title{font-size:2.8rem}.stats-row{gap:1.5rem;justify-content:center}.material-thumb{height:120px}}
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Үндсэн агуулга руу</a>
+
+<header class="site-header" role="banner" id="siteHeader">
+<div class="header-inner">
+<a href="#" class="logo" aria-label="Боловсролын Платформ — Нүүр хуудас"><span class="logo-mark" aria-hidden="true">◈</span><span class="logo-text">Боловсролын Платформ</span></a>
+<nav class="main-nav" aria-label="Үндсэн навигаци" role="navigation">
+<button id="menuBtn" class="menu-btn" aria-label="Нэвтрэх цэс" aria-expanded="false" aria-controls="mainNavList"><span></span><span></span><span></span></button>
+<ul id="mainNavList" class="nav-list" role="menubar">
+<li role="none"><a href="#hero" role="menuitem">Нүүр</a></li>
+<li role="none"><a href="#categories" role="menuitem">Хичээл</a></li>
+<li role="none"><a href="#materials" role="menuitem">Сурах бичиг</a></li>
+<li role="none"><a href="#progress" role="menuitem">Ахиц</a></li>
+</ul>
+</nav>
+<form class="search-form" role="search" aria-label="Хичээл хайх" onsubmit="event.preventDefault(); filterLessons(this.querySelector('input').value);">
+<label for="searchInput" class="sr-only">Хичээл хайх</label>
+<input id="searchInput" type="text" placeholder="Хичээл хайх…" autocomplete="off" aria-live="polite"/>
+<button type="submit" aria-label="Хайх"><span aria-hidden="true">🔍</span></button>
+</form>
+<div class="auth-actions" aria-label="Нэвтрэх, бүртгүүлэх">
+<button class="btn btn-ghost" onclick="openLogin()">Нэвтрэх</button>
+<button class="btn btn-primary" onclick="openRegister()">Бүртгүүлэх</button>
+</div>
+</div>
+</header>
+
+<main id="main" role="main">
+<!-- Hero -->
+<section id="hero" class="hero" aria-label="Платформын танилцуулга">
+<div class="container hero-grid">
+<div class="hero-text">
+<h1 class="hero-title">Онлайн хичээл, сурах бичиг<br><span class="accent">нэг дор</span></h1>
+<p class="hero-sub">Монголын сурагчдад зориулсан орчин үеийн боловсролын платформ. Хичээл үз, сурах бичиг нээ, ахиц хяна — бүгд нэг дор.</p>
+<div class="hero-cta">
+<a href="#categories" class="btn btn-primary btn-large">Хичээл үзэх</a>
+<a href="#materials" class="btn btn-ghost btn-large" style="color:#fff;border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.08);">Сурах бичиг</a>
+</div>
+</div>
+<div class="hero-visual" aria-hidden="true">
+<div class="cube-stage" role="img" aria-label="3D боловсролын дүрслэл">
+<div class="cube" id="cube3d">
+<div class="face face-front">✦</div>
+<div class="face face-back">◈</div>
+<div class="face face-right">◉</div>
+<div class="face face-left">◊</div>
+<div class="face face-top">◈</div>
+<div class="face face-bottom">✦</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Categories -->
+<section id="categories" class="categories" aria-label="Хичээлүүдийн ангилал">
+<div class="container">
+<h2 class="section-heading">Хичээлүүдийн ангилал</h2>
+<div class="category-grid" id="categoryGrid">
+<a href="#" class="category-card" data-cats="math,physics,chemistry" onclick="filterByCategory('math'); return false;" aria-label="Математик хичээл"><span class="cat-icon" aria-hidden="true">➕</span><h3>Математик</h3><p>Алгебр, геометр, тоолол</p></a>
+<a href="#" class="category-card" data-cats="physics,chemistry" onclick="filterByCategory('physics'); return false;" aria-label="Физик хичээл"><span class="cat-icon" aria-hidden="true">⚡</span><h3>Физик</h3><p>Механик, оптик, цахилгаан</p></a>
+<a href="#" class="category-card" data-cats="chemistry,biology" onclick="filterByCategory('chemistry'); return false;" aria-label="Хими хичээл"><span class="cat-icon" aria-hidden="true">🧪</span><h3>Хими</h3><p>Органик, органик бус, урвал</p></a>
+<a href="#" class="category-card" data-cats="biology" onclick="filterByCategory('biology'); return false;" aria-label="Биологи хичээл"><span class="cat-icon" aria-hidden="true">🌿</span><h3>Биологи</h3><p>Н эс, генетик, экологи</p></a>
+<a href="#" class="category-card" data-cats="mongolian,language" onclick="filterByCategory('mongolian'); return false;" aria-label="Монгол хэл хичээл"><span class="cat-icon" aria-hidden="true">📖</span><h3>Монгол хэл</h3><p>Дикц, бичиг, уран зохиол</p></a>
+<a href="#" class="category-card" data-cats="history" onclick="filterByCategory('history'); return false;" aria-label="Түүх хичээл"><span class="cat-icon" aria-hidden="true">🏛</span><h3>Түүх</h3><p>Монголын түүх, дэлхийн түүх</p></a>
+</div>
+</div>
+</section>
+
+<!-- Materials -->
+<section id="materials" class="materials" aria-label="Онцлох сургалтын материал">
+<div class="container">
+<h2 class="section-heading">Онцлох сургалтын материал</h2>
+<div class="materials-grid" id="materialsGrid">
+<article class="material-card" data-tags="math algebra video" aria-label="Алгебрын үндсэн хичээл"><div class="material-thumb" aria-hidden="true"><span>📐</span></div><h3>Алгебрын үндсэн</h3><p>Х квадрат тэгшитгэл, функцийг олох аргачлал.</p><a href="#" class="btn btn-ghost btn-sm">Хичээл үзэх →</a></article>
+<article class="material-card" data-tags="physics mechanics video" aria-label="Механик хичээл"><div class="material-thumb" aria-hidden="true"><span>⚡</span></div><h3>Механик хичээл</h3><p>Хүрд, хүч, ажлын тооцоо — жишээтэй.</p><a href="#" class="btn btn-ghost btn-sm">Хичээл үзэх →</a></article>
+<article class="material-card" data-tags="chemistry organic book" aria-label="Химийн сурах бичиг"><div class="material-thumb" aria-hidden="true"><span>🧪</span></div><h3>Химийн сурах бичиг</h3><p>Органик нэгдэл, урвалын механизмыг тайлбарласан.</p><a href="#" class="btn btn-ghost btn-sm">Сурах бичиг нээх →</a></article>
+<article class="material-card" data-tags="mongolian language book" aria-label="Монгол хэл — Дикц"><div class="material-thumb" aria-hidden="true"><span>📖</span></div><h3>Монгол хэл — Дикц</h3><p>Дикцийн дүрэм, жишээ болон дасгал.</p><a href="#" class="btn btn-ghost btn-sm">Сурах бичиг нээх →</a></article>
+</div>
+</div>
+</section>
+
+<!-- Progress -->
+<section id="progress" class="progress" aria-label="Сурагчийн ахиц">
+<div class="container progress-grid">
+<div class="progress-text">
+<h2>Сурагчийн ахиц</h2>
+<p>Хичээлийг үзсэн тоо, сурах бичгийг нээгдсэн тоо, нийт хугацаа — бүгд нэг дор.</p>
+<div class="stats-row">
+<div class="stat"><strong>12,459</strong><span>Хичээл үзсэн</span></div>
+<div class="stat"><strong>8,200</strong><span>Сурах бичиг нээгдсэн</span></div>
+<div class="stat"><strong>34,500</strong><span>Нийт цаг</span></div>
+</div>
+</div>
+<div class="progress-visual" aria-hidden="true">
+<svg viewBox="0 0 400 240" class="progress-chart" aria-label="Ахицийн график" role="img">
+<rect x="20" y="30" width="360" height="180" rx="12" fill="#1a2530" stroke="#334155" stroke-width="1.5"/>
+<polyline points="40,160 100,120 160,100 220,80 280,60 340,40" fill="none" stroke="#c4b49a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="100" cy="120" r="5" fill="#c4b49a"/>
+<circle cx="160" cy="100" r="5" fill="#c4b49a"/>
+<circle cx="220" cy="80" r="5" fill="#c4b49a"/>
+<circle cx="280" cy="60" r="5" fill="#c4b49a"/>
+<circle cx="340" cy="40" r="5" fill="#c4b49a"/>
+<text x="30" y="220" font-size="11" fill="#94a3b8" font-family="sans-serif">1-р сем</text>
+<text x="100" y="220" font-size="11" fill="#94a3b8" font-family="sans-serif">2-р сем</text>
+<text x="170" y="220" font-size="11" fill="#94a3b8" font-family="sans-serif">3-р сем</text>
+<text x="240" y="220" font-size="11" fill="#94a3b8" font-family="sans-serif">4-р сем</text>
+<text x="310" y="220" font-size="11" fill="#94a3b8" font-family="sans-serif">5-р сем</text>
+</svg>
+</div>
+</div>
+</section>
+
+<section id="method" class="extend-section" aria-label="Хичээлийн аргачлал">
+<div class="container">
+<h2 class="section-heading">Хичээлийн аргачлал</h2>
+<div class="category-grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr));">
+<div class="material-card"><div class="material-thumb" style="background:linear-gradient(135deg,#3d5a7a,#2c3e50);"><span>🎓</span></div><h3>Видео хичээл</h3><p>10-15 минутын богино, ойлгомжтой видеонууд — хичээл бүр дэмжигдсэн.</p></div>
+<div class="material-card"><div class="material-thumb" style="background:linear-gradient(135deg,#5a7a6e,#3d5a7a);"><span>📘</span></div><h3>Сурах бичиг</h3><p>Иххү бие даалттай сурах бичиг, дасгал, жишээ — дэлгэрэнгүй.</p></div>
+</div>
+</div>
+</section>
+<section id="beginner" class="extend-section" style="background:linear-gradient(180deg,#f8f6f2 0%,#fff 100%);" aria-label="Эхлэгчидэд зориулсан">
+<div class="container">
+<h2 class="section-heading">Эхлэгчидэд зориулсан</h2>
+<p style="font-size:1.1rem;color:#555;max-width:600px;line-height:1.65;margin-bottom:2rem;">Боловсролын платформ нь бүх түвшний сурагчдад тохирсон — анхлан сурагчид, дунд, ахисан. Хичээл бүрт эхлэгчийн гарын авлага бий.</p>
+<div class="stats-row" style="margin-top:1rem;"><div class="stat"><strong style="font-family:var(--font-display);font-size:1.8rem;color:var(--ink);">5</strong><span>Түвшин</span></div><div class="stat"><strong style="font-family:var(--font-display);font-size:1.8rem;color:var(--ink);">120+</strong><span>Хичээл</span></div><div class="stat"><strong style="font-family:var(--font-display);font-size:1.8rem;color:var(--ink);">24/7</strong><span>Хандах</span></div></div>
+</div>
+</section>
+</main>
+
+<footer class="site-footer" role="contentinfo">
+<div class="footer-grid">
+<div class="footer-brand">
+<a href="#" class="logo" aria-label="Боловсролын Платформ — Нүүр хуудас"><span class="logo-mark" aria-hidden="true">◈</span><span class="logo-text">Боловсролын Платформ</span></a>
+<p>Монголын сурагчдад зориулсан орчин үеийн онлайн сургууль.</p>
+</div>
+<nav aria-label="Хичээл" class="footer-nav"><h4>Хичээл</h4><ul><li><a href="#">Математик</a></li><li><a href="#">Физик</a></li><li><a href="#">Хими</a></li><li><a href="#">Биологи</a></li></ul></nav>
+<nav aria-label="Мэдээлэл" class="footer-nav"><h4>Мэдээлэл</h4><ul><li><a href="#">Бидний тухай</a></li><li><a href="#">Холбоо барих</a></li><li><a href="#">Нууцлал</a></li></ul></nav>
+<div class="footer-social" aria-label="Нийгмийн медиа">
+<a href="#" aria-label="Facebook"><span aria-hidden="true">📘</span></a>
+<a href="#" aria-label="Instagram"><span aria-hidden="true">📷</span></a>
+<a href="#" aria-label="YouTube"><span aria-hidden="true">▶</span></a>
+</div>
+</div>
+<div class="footer-bottom" aria-label="Мэдээлэл"><p>© 2026 Боловсролын Платформ. Бүгд эрх хуулиар хамгаалагдсан.</p></div>
+</footer>
+
+<dialog id="loginDialog" class="dialog" aria-modal="true" aria-label="Нэвтрэх цонх" role="dialog">
+<form method="dialog" onsubmit="closeLogin(); return false;">
+<h2>Нэвтрэх</h2>
+<label for="loginEmail">И-мэйл</label><input id="loginEmail" type="email" required placeholder="you@email.mn"/>
+<label for="loginPass">Нууц үг</label><input id="loginPass" type="password" required placeholder="••••••••"/>
+<button type="submit" class="btn btn-primary">Нэвтрэх</button>
+<button type="button" class="btn btn-ghost" onclick="closeLogin()">Болих</button>
+</form>
+</dialog>
+
+<dialog id="registerDialog" class="dialog" aria-modal="true" aria-label="Бүртгүүлэх цонх" role="dialog">
+<form method="dialog" onsubmit="closeRegister(); showToast('Бүртгэлийн хүсэлт хүлээн авлаа'); return false;">
+<h2>Бүртгэгдэх</h2>
+<label for="regName">Нэр</label><input id="regName" type="text" required placeholder="Нэр"/>
+<label for="regEmail">И-мэйл</label><input id="regEmail" type="email" required placeholder="you@email.mn"/>
+<label for="regPass">Нууц үг</label><input id="regPass" type="password" required placeholder="••••••••"/>
+<button type="submit" class="btn btn-primary">Бүртгүүлэх</button>
+<button type="button" class="btn btn-ghost" onclick="closeRegister()">Болих</button>
+</form>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<button onclick="window.scrollTo({top:0,behavior:'smooth'})" class="btn-back-top" aria-label="Дээд рүү">↑</button>
+
+<script src="main.js"></script>
+<script src="cursor-trail.js" defer></script>
+
+<!-- Decorative extended section for longer scroll + small details -->
+<section id="details" aria-label="Small decorative details" style="padding:8rem 3vw; background:linear-gradient(180deg,#f8f6f2 0%,#ece9df 100%); position:relative; overflow:hidden;">
+  <div style="max-width:1200px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:3rem; align-items:start;">
+    <article style="padding:2rem; background:#fff; border-radius:var(--radius); box-shadow:0 20px 60px rgba(0,0,0,.06);">
+      <h3 style="font-family:var(--font-display); font-size:1.6rem; margin-bottom:.6rem; color:var(--ink);">Мэдээлэл</h3>
+      <p style="color:var(--ink-faint); font-size:.95rem; line-height:1.65;">Жижиг нарийн чанар, өнгөний хослол болон картын хөдөлгөөн нь сайтын уртыг уртасгаж, хэрэглэгчийн анхаарлыг хандуулна.</p>
+      <div style="margin-top:1.5rem; display:flex; gap:.5rem;">
+        <span style="width:10px; height:10px; border-radius:50%; background:var(--gold); box-shadow:0 0 8px rgba(196,180,154,.5);"></span>
+        <span style="width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px rgba(44,62,80,.5);"></span>
+        <span style="width:10px; height:10px; border-radius:50%; background:var(--warm); box-shadow:0 0 8px rgba(139,115,75,.5);"></span>
+      </div>
+    </article>
+    <article style="padding:2rem; background:var(--ink); border-radius:var(--radius); box-shadow:0 20px 60px rgba(0,0,0,.18); color:#fff;">
+      <h3 style="font-family:var(--font-display); font-size:1.6rem; margin-bottom:.6rem;">Холбоо</h3>
+      <p style="color:#aaa; font-size:.95rem; line-height:1.65;">Сайтын урт уртасгахын тулд нэмэлт хэсэг нэмлээ. Скроллtrigger хөдөлгөөн нь шинэ хэсэгт ажиллана.</p>
+      <p style="margin-top:1rem; color:var(--gold); font-weight:600; font-size:.9rem;">ScrollTrigger + Cursor orbit + 3 trailing dots</p>
+    </article>
+  </div>
+  <!-- Small floating decorative dots -->
+  <div style="position:absolute; top:10%; left:15%; pointer-events:none; z-index:0;">
+    <div style="width:20px;height:20px;border-radius:50%;background:rgba(196,180,154,.2);animation:dotFloat 6s ease-in-out infinite alternate;"></div>
+    <div style="width:12px;height:12px;border-radius:50%;background:rgba(196,180,154,.15);animation:dotFloat 8s ease-in-out infinite alternate;animation-delay:1s;margin-top:30px;margin-left:40px;"></div>
+    <div style="width:16px;height:16px;border-radius:50%;background:rgba(44,62,80,.15);animation:dotFloat 7s ease-in-out infinite alternate;animation-delay:.6s;margin-top:20px;margin-left:-20px;"></div>
+  </div>
+  <style>@keyframes dotFloat{from{transform:translateY(0)}to{transform:translateY(-25px)}}</style>
+</section>
+</body>
+</html>

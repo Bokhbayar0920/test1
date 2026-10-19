@@ -1,0 +1,122 @@
+/* =============================================================
+   GENERATIVE SHADER-STYLE HERO — gold/ink radial blobs
+   Replaces .hero::before / ::after  (styles.css L97-98)
+   Pure CSS continuous animation — no WebGL / Canvas
+   ============================================================= */
+
+.hero::before,
+.hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: multiply;
+  filter: contrast(1.08) brightness(1.02);
+}
+
+/* ---- Blob 1: warm gold / ink radial gradient ---- */
+.hero::before {
+  top: -22%; right: -12%;
+  width: 72vw; height: 72vw;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(139,115,75,0.22) 0%, rgba(139,115,75,0.08) 40%, transparent 70%),
+    radial-gradient(circle at 65% 65%, rgba(44,62,80,0.18) 0%, rgba(44,62,80,0.06) 45%, transparent 70%),
+    radial-gradient(ellipse at 50% 50%, rgba(210,185,140,0.12) 0%, transparent 60%);
+  animation:
+    blob-rotate-1 28s ease-in-out infinite alternate,
+    blob-scale-1 22s ease-in-out infinite alternate,
+    blob-drift-1 35s linear infinite,
+    noise-shift 0.35s steps(12) infinite;
+  opacity: 0.95;
+}
+
+/* ---- Blob 2: ink / warm inverse radial gradient ---- */
+.hero::after {
+  bottom: -18%; left: -14%;
+  width: 68vw; height: 68vw;
+  background:
+    radial-gradient(circle at 40% 40%, rgba(44,62,80,0.20) 0%, rgba(44,62,80,0.07) 45%, transparent 70%),
+    radial-gradient(circle at 60% 60%, rgba(139,115,75,0.18) 0%, rgba(139,115,75,0.06) 50%, transparent 70%),
+    radial-gradient(ellipse at 50% 50%, rgba(220,195,145,0.12) 0%, transparent 60%);
+  animation:
+    blob-rotate-2 32s ease-in-out infinite alternate,
+    blob-scale-2 24s ease-in-out infinite alternate,
+    blob-drift-2 40s linear infinite,
+    noise-shift 0.35s steps(12) infinite;
+  opacity: 0.95;
+}
+
+/* ---- Subtle noise overlay (fractal-noise SVG) ---- */
+.hero::before, .hero::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ============================================================
+   KEYFRAMES — continuous rotation / scale / drift
+   ============================================================ */
+@keyframes blob-rotate-1 {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(90deg); }
+  50%  { transform: rotate(180deg); }
+  75%  { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes blob-rotate-2 {
+  0%    { transform: rotate(360deg); }
+  25%   { transform: rotate(270deg); }
+  50%   { transform: rotate(180deg); }
+  75%   { transform: rotate(90deg); }
+  100%  { transform: rotate(0deg); }
+}
+
+@keyframes blob-scale-1 {
+  0%,100% { transform: scale(1) rotate(0deg); }
+  33%     { transform: scale(1.14) rotate(120deg); }
+  66%     { transform: scale(0.9) rotate(240deg); }
+}
+
+@keyframes blob-scale-2 {
+  0%,100% { transform: scale(1) rotate(360deg); }
+  33%     { transform: scale(1.10) rotate(240deg); }
+  66%     { transform: scale(1.16) rotate(120deg); }
+}
+
+@keyframes blob-drift-1 {
+  0%    { transform: translate(0,0) rotate(0deg); }
+  25%   { transform: translate(7vw,-3vh) rotate(90deg); }
+  50%   { transform: translate(-4vw,6vh) rotate(180deg); }
+  75%   { transform: translate(5vw,-2vh) rotate(270deg); }
+  100%  { transform: translate(0,0) rotate(360deg); }
+}
+
+@keyframes blob-drift-2 {
+  0%    { transform: translate(0,0) rotate(360deg); }
+  25%   { transform: translate(-6vw,4vh) rotate(270deg); }
+  50%   { transform: translate(3vw,-5vh) rotate(180deg); }
+  75%   { transform: translate(-5vw,2vh) rotate(90deg); }
+  100%  { transform: translate(0,0) rotate(0deg); }
+}
+
+@keyframes noise-shift {
+  0%   { background-position: 0 0; }
+  10%  { background-position: 20px -20px; }
+  20%  { background-position: -30px 10px; }
+  30%  { background-position: 10px 30px; }
+  40%  { background-position: -20px -10px; }
+  50%  { background-position: 30px -30px; }
+  60%  { background-position: -10px 20px; }
+  70%  { background-position: 20px 5px; }
+  80%  { background-position: -30px -20px; }
+  90%  { background-position: 10px -5px; }
+  100% { background-position: 0 0; }
+}
+
+/* ---- Small decorative detail pseudo-layers (additive radial gradients, no box-shadow conflict) ---- */
+.hero .detail-dot { display:none; } /* placeholder for optional JS injection */
+/* Add subtle secondary radial glow via CSS variable-driven background blend (already in main gradients) */
+.hero::before { background-blend-mode: screen, multiply, normal; }
+.hero::after  { background-blend-mode: screen, multiply, normal; }
